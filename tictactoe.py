@@ -22,16 +22,19 @@ class board():
         print(' ' * 3 + '1' + ' ' * 7 + '2' + ' ' * 7 + '3')
         # board
         print(' ' * 7 + '|' + ' ' * 7 + '|' + ' ' * 7)
-        print('1' + ' ' * 2 + self.pos[0][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[0][1] + ' ' * 3 + '|' + ' ' * 3 + self.pos[0][2] +
+        print('1' + ' ' * 2 + self.pos[0][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[0][1] + ' ' * 3 + '|' + ' ' * 3 +
+              self.pos[0][2] +
               ' ' * 3)
         print('_' * 7 + '|' + '_' * 7 + '|' + '_' * 7)
         print(' ' * 7 + '|' + ' ' * 7 + '|' + ' ' * 7)
-        print('2' + ' ' * 2 + self.pos[1][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[1][1] + ' ' * 3 + '|' + ' ' * 3 + self.pos[1][
-            2] + ' ' * 3)
+        print('2' + ' ' * 2 + self.pos[1][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[1][1] + ' ' * 3 + '|' + ' ' * 3 +
+              self.pos[1][
+                  2] + ' ' * 3)
         print('_' * 7 + '|' + '_' * 7 + '|' + '_' * 7)
         print(' ' * 7 + '|' + ' ' * 7 + '|' + ' ' * 7)
-        print('3' + ' ' * 2 + self.pos[2][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[2][1] + ' ' * 3 + '|' + ' ' * 3 + self.pos[2][
-            2] + ' ' * 3)
+        print('3' + ' ' * 2 + self.pos[2][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[2][1] + ' ' * 3 + '|' + ' ' * 3 +
+              self.pos[2][
+                  2] + ' ' * 3)
         print(' ' * 7 + '|' + ' ' * 7 + '|' + ' ' * 7)
         print('')
 
@@ -70,13 +73,21 @@ class board():
         if len(groups) == 1 and k != '-':
             self.winner = k
 
+    def validate_input(self, move):
+        try:
+            xmove, ymove = map(int, move.split(','))
+        except ValueError:
+            print("hi")
+        finally:
+            return xmove, ymove
+
 
 def start_game():
     match = board()
     print("make your move, i.e. '3,1' marks the third tile down in the first column.")
     while True:
         move = input()
-        xmove, ymove = map(int, move.split(','))
+        xmove, ymove = match.validate_input(move)
         result = match.update_pos(xmove - 1, ymove - 1)
         if result:
             print("Player " + match.winner + " wins!")
@@ -84,10 +95,10 @@ def start_game():
             break
     return playagain
 
+
 while True:
     response = start_game()
     if response == 'y' or response == 'Y':
         continue
     else:
         break
-
