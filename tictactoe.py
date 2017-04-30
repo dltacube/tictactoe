@@ -1,18 +1,28 @@
 import sys
 from itertools import groupby
 import os
+import ctypes
+from copy import deepcopy
 
 
 # pos = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
+default_pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
 
-class board():
+class Board:
     turn = 'X'
     winner = False
-    pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
-
-    def __init__(self):
-        self.draw_board()
-        self.pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
+    # pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
+    valid_moves = []
+    # pos = []
+    def __init__(self, positions = default_pos, turn = 'X', row_move = '', col_move = ''):
+        self.pos = positions
+        self.turn = turn
+        self.row_move = row_move
+        self.col_move = col_move
+        self.getavailablemoves()
+        if row_move != '' and col_move != '':
+             self.update_pos(self.row_move, self.col_move)
+        self.getavailablemoves()
 
     def draw_board(self):
         # clears the terminal
@@ -42,10 +52,10 @@ class board():
         if self.pos[x][y] == '-':
             self.pos[x][y] = self.turn
             self.turn = 'O' if self.turn == 'X' else 'X'
-            self.check_for_winner()
         else:
             print('invalid position. try again')
         self.draw_board()
+        self.check_for_winner()
         return True if self.winner else False
 
     def check_for_winner(self):
@@ -73,19 +83,46 @@ class board():
         if len(groups) == 1 and k != '-':
             self.winner = k
 
-    def validate_input(self, move):
-        try:
-            xmove, ymove = map(int, move.split(','))
-        except ValueError:
-            print("hi")
-        finally:
-            return xmove, ymove
+    def getavailablemoves(self):
+        self.valid_moves = []
+        for row in enumerate(self.pos):
+            for col in enumerate(row[1]):
+                if col[1] == '-':
+                    self.valid_moves.append([row[0], col[0]])
 
+    def validate_input(self, move):
+        print("validating input...")
+        self.getavailablemoves()
+        # try:
+        xmove, ymove = map(int, move.split(','))
+        # except ValueError:
+        #     print("hi")
+        # finally:
+        return xmove, ymove
+
+    def find_next_move(self, allmoves):
+        for move in allmoves:
+            newboard = Board(deepcopy(self.pos), self.turn, move[0], move[1])
+            next_move = newboard.find_next_move(newboard.valid_moves)
+            if len(newboard.valid_moves) == 0:
+                newboard = None
+        # if len(allmoves) > 1:
+        #     for move in allmoves:
+        #         print(move)
+        #         hypothetical = Board(self.pos, self.turn, move[0], move[1])
+        #         if hypothetical.winner:
+        #             print(hypothetical.winner + ' would win the match')
+        #         else:
+        #             hypothetical.getavailablemoves()
+        #             hypothetical.find_next_move(hypothetical.valid_moves)
+        # elif len(allmoves) > 0:
+        #     hypothetical = Board(self.pos, self.turn, allmoves[0][0], allmoves[0][1])
 
 def start_game():
-    match = board()
+    match = Board([['X', 'O', 'X'], ['-', 'X', '-'], ['-', 'O', '-']], 'O')
     print("make your move, i.e. '3,1' marks the third tile down in the first column.")
     while True:
+        match.find_next_move(match.valid_moves)
         move = input()
         xmove, ymove = match.validate_input(move)
         result = match.update_pos(xmove - 1, ymove - 1)
@@ -97,7 +134,9 @@ def start_game():
 
 
 while True:
+    # Start a new game.
     response = start_game()
+    # After the game has ended, check if the player wants to play another round
     if response == 'y' or response == 'Y':
         continue
     else:
