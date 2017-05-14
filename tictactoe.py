@@ -2,27 +2,40 @@ import sys
 from itertools import groupby
 import os
 import ctypes
-from copy import deepcopy
+from copy import deepcopy, copy
 
 
 # pos = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
 default_pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
-
+zebra = 1
 class Board:
-    turn = 'X'
-    winner = False
     # pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
-    valid_moves = []
+
     # pos = []
-    def __init__(self, positions = default_pos, turn = 'X', row_move = '', col_move = ''):
+    score = []
+    cpu = None
+    def __init__(self, positions = default_pos, row_move = '', col_move = ''):
         self.pos = positions
-        self.turn = turn
         self.row_move = row_move
         self.col_move = col_move
         self.getavailablemoves()
         if row_move != '' and col_move != '':
              self.update_pos(self.row_move, self.col_move)
+        o_plays, x_plays = 0,0
+        for row in self.pos:
+            for col in row:
+                if col == 'O':
+                    o_plays += 1
+                if col == 'X':
+                    x_plays += 1
+        if x_plays > o_plays:
+            self.turn = 'O'
+        else:
+            self.turn = 'X'
+        self.winner = False
+        self.valid_moves = []
         self.getavailablemoves()
+        self.check_for_winner()
 
     def draw_board(self):
         # clears the terminal
@@ -54,9 +67,6 @@ class Board:
             self.turn = 'O' if self.turn == 'X' else 'X'
         else:
             print('invalid position. try again')
-        self.draw_board()
-        self.check_for_winner()
-        return True if self.winner else False
 
     def check_for_winner(self):
         for y in range(0, 3):
@@ -100,29 +110,88 @@ class Board:
         # finally:
         return xmove, ymove
 
-    def find_next_move(self, allmoves):
-        for move in allmoves:
-            newboard = Board(deepcopy(self.pos), self.turn, move[0], move[1])
-            next_move = newboard.find_next_move(newboard.valid_moves)
-            if len(newboard.valid_moves) == 0:
-                newboard = None
-        # if len(allmoves) > 1:
-        #     for move in allmoves:
-        #         print(move)
-        #         hypothetical = Board(self.pos, self.turn, move[0], move[1])
-        #         if hypothetical.winner:
-        #             print(hypothetical.winner + ' would win the match')
-        #         else:
-        #             hypothetical.getavailablemoves()
-        #             hypothetical.find_next_move(hypothetical.valid_moves)
-        # elif len(allmoves) > 0:
-        #     hypothetical = Board(self.pos, self.turn, allmoves[0][0], allmoves[0][1])
+    def find_next_move(self, allmoves, moves=[], levl=0):
+        print(zebra)
+        zebra += 1
+        for i in range(len(allmoves)):
+            newboard = Board(deepcopy(self.pos), self.turn)
+            newboard.update_pos(allmoves[i][0], allmoves[i][1])
+            newboard.check_for_winner()
+            newboard.getavailablemoves()
+            moves.append(allmoves[i])
+            if newboard.winner:
+                # newboard.draw_board()
+                # print(newboard.winner + ' wins the match')
+                # print(moves)
+                # print('level: ' + str(levl))
+                if self.turn == self.cpu:
+                    self.score.append([10, levl, copy(moves)])
+                else:
+                    self.score.append([-10, levl, copy(moves)])
+                # long term storage for movelist goes here
+                moves.pop()
+            elif len(newboard.valid_moves) < 1:
+                # print('stalemate')
+                # print(moves)
+                # print('level: ' + str(levl))
+                #this means no winner - store this list too for stalemates
+                self.score.append([0, levl, copy(moves)])
+                moves.pop()
+            else:
+                newboard.find_next_move(newboard.valid_moves, levl=levl+1)
+                moves.pop()
+
+    def find_best_move(self):
+        firstmoves = []
+        for x in self.score:
+            firstmoves.append(x[2][0])
+        fmove = []
+        for k, g in groupby(firstmoves):
+            fmove.append(k)
+        tally = {}
+        for play in self.score:
+            if play[2][0] in fmove:
+                if str(play[2][0]) in tally:
+                    tally[str(play[2][0])] = tally[str(play[2][0])] + play[0]
+                else:
+                    tally[str(play[2][0])] = play[0]
+
+        # get the highest value
+        return sorted(tally, key=tally.get)[0].strip('[]').split(',')
+        # ls = []
+        # win = []
+        # # isolate winning moves
+        # for x in self.score:
+        #     if x[0] == 10:
+        #         ls.append(x[2][0])
+        # for move, g in groupby(ls):
+        #     win.append(move)
+        # winning_tree = [x for x in self.score if x[2][0] in win]
+        # # byfirstmove = sorted(winning_tree, key=lambda firstmove: firstmove[2][0])
+        # # byscore = sorted(byfirstmove, key=lambda score: score[0])
+        # bydepth = sorted(byfirstmove, key=lambda key: key[1])
+        # for x in sorted(self.score, key=lambda firstmove: firstmove[2][0]):
+        #     if x[2][0] in win:
+        #         print(x)
+
 
 def start_game():
-    match = Board([['X', 'O', 'X'], ['-', 'X', '-'], ['-', 'O', '-']], 'O')
+    # match = Board([['X', 'O', 'X'], ['-', 'X', '-'], ['-', 'O', '-']], 'O')
+    # match = Board([['X', 'X', 'O'], ['O', 'O', 'X'], ['X', '-', '-']], 'O')
+    match = Board()
+    print("Would you like to play first? y/n")
+    firstplayer = input()
+    if firstplayer == 'y':
+        Board.cpu = 'O'
+    else:
+        Board.cpu = 'X'
     print("make your move, i.e. '3,1' marks the third tile down in the first column.")
     while True:
+        # Board.cpu = 'O'
         match.find_next_move(match.valid_moves)
+        print('best move:')
+        bestmove = match.find_best_move()
+        print(bestmove)
         move = input()
         xmove, ymove = match.validate_input(move)
         result = match.update_pos(xmove - 1, ymove - 1)
