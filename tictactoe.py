@@ -7,7 +7,7 @@ from copy import deepcopy, copy
 
 # pos = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
 default_pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
-zebra = 1
+# zebra = 1
 class Board:
     # pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
 
@@ -111,8 +111,9 @@ class Board:
         return xmove, ymove
 
     def find_next_move(self, allmoves, moves=[], levl=0):
-        print(zebra)
-        zebra += 1
+        # global zebra
+        # print(zebra)
+        # zebra += 1
         for i in range(len(allmoves)):
             newboard = Board(deepcopy(self.pos), self.turn)
             newboard.update_pos(allmoves[i][0], allmoves[i][1])
@@ -125,9 +126,9 @@ class Board:
                 # print(moves)
                 # print('level: ' + str(levl))
                 if self.turn == self.cpu:
-                    self.score.append([10, levl, copy(moves)])
+                    self.score.append([10 - levl, levl, copy(moves)])
                 else:
-                    self.score.append([-10, levl, copy(moves)])
+                    self.score.append([levl - 10, levl, copy(moves)])
                 # long term storage for movelist goes here
                 moves.pop()
             elif len(newboard.valid_moves) < 1:
@@ -142,22 +143,34 @@ class Board:
                 moves.pop()
 
     def find_best_move(self):
-        firstmoves = []
-        for x in self.score:
-            firstmoves.append(x[2][0])
-        fmove = []
-        for k, g in groupby(firstmoves):
-            fmove.append(k)
-        tally = {}
-        for play in self.score:
-            if play[2][0] in fmove:
-                if str(play[2][0]) in tally:
-                    tally[str(play[2][0])] = tally[str(play[2][0])] + play[0]
-                else:
-                    tally[str(play[2][0])] = play[0]
+        total = {}
+        for move in self.valid_moves:
+            tmp = 0
+            for x in self.score:
+                if x[2][0] == move:
+                    tmp += x[0]
+            total.update({str(move): tmp})
+        for key in total.keys():
+            if total[key] == max(total.values()):
+                return(key)
+
+                    #
+        # firstmoves = []
+        # for x in self.score:
+        #     firstmoves.append(x[2][0])
+        # fmove = []
+        # for k, g in groupby(firstmoves):
+        #     fmove.append(k)
+        # tally = {}
+        # for play in self.score:
+        #     if play[2][0] in fmove:
+        #         if str(play[2][0]) in tally:
+        #             tally[str(play[2][0])] = tally[str(play[2][0])] + play[0]
+        #         else:
+        #             tally[str(play[2][0])] = play[0]
 
         # get the highest value
-        return sorted(tally, key=tally.get)[0].strip('[]').split(',')
+        # return sorted(tally, key=tally.get)[0].strip('[]').split(',')
         # ls = []
         # win = []
         # # isolate winning moves
@@ -177,7 +190,9 @@ class Board:
 
 def start_game():
     # match = Board([['X', 'O', 'X'], ['-', 'X', '-'], ['-', 'O', '-']], 'O')
-    # match = Board([['X', 'X', 'O'], ['O', 'O', 'X'], ['X', '-', '-']], 'O')
+    # match = Board([['X', 'O', 'X'], ['-', 'O', '-'], ['-', '-', '-']], 'X')
+    # Board.cpu = 'O'
+
     match = Board()
     print("Would you like to play first? y/n")
     firstplayer = input()
@@ -185,17 +200,24 @@ def start_game():
         Board.cpu = 'O'
     else:
         Board.cpu = 'X'
-    print("make your move, i.e. '3,1' marks the third tile down in the first column.")
+    match.draw_board()
+    print("make your move, i.e. '2,0' marks the third tile down in the first column.")
     while True:
         # Board.cpu = 'O'
-        match.find_next_move(match.valid_moves)
-        print('best move:')
-        bestmove = match.find_best_move()
-        print(bestmove)
-        move = input()
+        if match.turn == match.cpu:
+            Board.score = []
+            match.getavailablemoves()
+            match.find_next_move(match.valid_moves)
+            print('best move:')
+            bestmove = match.find_best_move()
+            move = bestmove[1] + ', ' + bestmove[4]
+        else:
+            move = input()
         xmove, ymove = match.validate_input(move)
-        result = match.update_pos(xmove - 1, ymove - 1)
-        if result:
+        result = match.update_pos(xmove, ymove)
+        match.draw_board()
+        match.check_for_winner()
+        if match.winner:
             print("Player " + match.winner + " wins!")
             playagain = input("play again? y/n: ")
             break
