@@ -114,45 +114,131 @@ class Board:
         # global zebra
         # print(zebra)
         # zebra += 1
-        for i in range(len(allmoves)):
-            newboard = Board(deepcopy(self.pos), self.turn)
-            newboard.update_pos(allmoves[i][0], allmoves[i][1])
-            newboard.check_for_winner()
-            newboard.getavailablemoves()
-            moves.append(allmoves[i])
-            if newboard.winner:
-                # newboard.draw_board()
-                # print(newboard.winner + ' wins the match')
-                # print(moves)
-                # print('level: ' + str(levl))
-                if self.turn == self.cpu:
-                    self.score.append([10 - levl, levl, copy(moves)])
+            for i in range(len(allmoves)):
+                newboard = Board(deepcopy(self.pos), self.turn)
+                newboard.update_pos(allmoves[i][0], allmoves[i][1])
+                newboard.check_for_winner()
+                newboard.getavailablemoves()
+                moves.append(allmoves[i])
+                if newboard.winner:
+                    # newboard.draw_board()
+                    # print(newboard.winner + ' wins the match')
+                    # print(moves)
+                    # print('level: ' + str(levl))
+                    if self.turn == self.cpu:
+                        self.score.append([10 - levl, levl, copy(moves)])
+                    else:
+                        self.score.append([levl - 10, levl, copy(moves)])
+                    # long term storage for movelist goes here
+                    moves.pop()
+                elif len(newboard.valid_moves) < 1:
+                    # print('stalemate')
+                    # print(moves)
+                    # print('level: ' + str(levl))
+                    #this means no winner - store this list too for stalemates
+                    self.score.append([0, levl, copy(moves)])
+                    moves.pop()
                 else:
-                    self.score.append([levl - 10, levl, copy(moves)])
-                # long term storage for movelist goes here
-                moves.pop()
-            elif len(newboard.valid_moves) < 1:
-                # print('stalemate')
-                # print(moves)
-                # print('level: ' + str(levl))
-                #this means no winner - store this list too for stalemates
-                self.score.append([0, levl, copy(moves)])
-                moves.pop()
-            else:
-                newboard.find_next_move(newboard.valid_moves, levl=levl+1)
-                moves.pop()
+                    newboard.find_next_move(newboard.valid_moves, levl=levl+1)
+                    moves.pop()
 
     def find_best_move(self):
+        levels = set([l[0] for l in groupby(self.score, key=lambda x: x[1])])
         total = {}
-        for move in self.valid_moves:
+        for move in self.score:
+            firstmv = str(move[2][0])
+            if firstmv not in total.keys():
+                total.update({firstmv: {move[1]: move[0]}})
+            else:
+                if move[1] not in total[firstmv].keys():
+                    total[firstmv].update({move[1]: move[0]})
+                else:
+                    total[firstmv][move[1]] += move[0]
+        for k, v in total.items():
+            print(k + ' ' + str(v))
+
+        for level in levels:
+            prev_value = None
             tmp = 0
-            for x in self.score:
-                if x[2][0] == move:
-                    tmp += x[0]
-            total.update({str(move): tmp})
-        for key in total.keys():
-            if total[key] == max(total.values()):
-                return(key)
+            move = 0
+            for k, v in total.items():
+                if not level in v.keys():
+                    v[level] = 0
+                if prev_value is not None:
+                    # if (level % 2 == 1) and v[level] < prev_value:
+                    #   tmp = v[level]
+                    #  prev_value = v[level]
+                    # print(tmp)
+                    if v[level] > prev_value:  # (level % 2 == 0) and
+                        move = k
+                        tmp = v[level]
+                        prev_value = v[level]
+                else:
+                    prev_value = v[level]
+                    tmp = v[level]
+                    move = k
+            if [v[level] for k, v in total.items()].count(tmp) == 1:
+                return move
+        return move
+
+
+        # bestmove = None
+        # prev_value = None
+        # for level in levels:
+        #     for k, v in total.items():
+        #         if not prev_value:
+        #             prev_value = 0
+        #         if 1 not in v.keys():
+        #             if prev_value <= 0:
+        #                 bestmove = k
+        #                 prev_value = 0
+        #         else:
+        #             if prev_value < v[1]:
+        #                 bestmove = k
+        #                 prev_value = v[1]
+        #     if not bestmove:
+        #         bestmove = self.valid_moves[0]
+        #
+        # return str(bestmove)
+
+                        # total = {}
+        # for move in self.valid_moves:
+        #     tmp = 0
+        #     for x in self.score:
+        #         if x[2][0] == move:
+        #             tmp += x[0]
+        #     total.update({str(move): tmp})
+        # for key in total.keys():
+        #     if total[key] == max(total.values()):
+        #         return(key)
+
+        # maximin = max(self.score)
+        # minimax = min(self.score)
+        # if maximin[2][0] == minimax[2][-1]:
+        #     return maximin[2][0]
+        # if abs(minimax[0]) > abs(maximin[0]):
+        #     return minimax[2][-1]
+        # else:
+        #     return maximin[2][0]
+
+
+                # if maximin[1] < minimax[1]:
+        #     return maximin[2][0]
+        # else:
+        #     return minimax[2][0]
+        # if maximin[2][0] == minimax[2][-1]:
+        #     return maximin[2][0]
+                # for omove in self.valid_moves:
+                #     otmp = 0
+                #     for xmove in self.valid_moves:
+                #         if xmove != omove:
+                #             tmp = 0
+                #             for x in self.score:
+                #                 if omove == x[2][0] and xmove == x[2][1]:
+                #                     tmp += x[0]
+                #                     otmp += x[0]
+                #             print(str(omove) + ' ' + str(xmove) + ' = ' + str(tmp))
+                #     print(str(omove) + ' ' + str(otmp))
 
                     #
         # firstmoves = []
@@ -191,8 +277,8 @@ class Board:
 def start_game():
     # match = Board([['X', 'O', 'X'], ['-', 'X', '-'], ['-', 'O', '-']], 'O')
     # match = Board([['X', 'O', 'X'], ['-', 'O', '-'], ['-', '-', '-']], 'X')
+    # match = Board([['O', '-', '-'], ['X', 'X', '-'], ['O', '-', 'X']], 'O')
     # Board.cpu = 'O'
-
     match = Board()
     print("Would you like to play first? y/n")
     firstplayer = input()
@@ -210,7 +296,7 @@ def start_game():
             match.find_next_move(match.valid_moves)
             print('best move:')
             bestmove = match.find_best_move()
-            move = bestmove[1] + ', ' + bestmove[4]
+            move = str(bestmove[1]) + ', ' + str(bestmove[4])
         else:
             move = input()
         xmove, ymove = match.validate_input(move)
