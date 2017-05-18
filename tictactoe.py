@@ -1,17 +1,10 @@
-import sys
 from itertools import groupby
 import os
-import ctypes
 from copy import deepcopy, copy
 
 
-# pos = [['1', '2', '3'], ['4', '5', '6'], ['7', '8', '9']]
 default_pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
-# zebra = 1
 class Board:
-    # pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
-
-    # pos = []
     score = []
     cpu = None
     def __init__(self, positions = default_pos, row_move = '', col_move = ''):
@@ -86,7 +79,6 @@ class Board:
         '''we group together all recurring characters then check if there is more than one group.
         If there are 2 groups or more, the sequence does not have 3 consecutives of any particular key'''
         groups = []
-        keys = []
         for k, g in groupby(seq):
             groups.append(list(g))
 
@@ -103,17 +95,10 @@ class Board:
     def validate_input(self, move):
         print("validating input...")
         self.getavailablemoves()
-        # try:
         xmove, ymove = map(int, move.split(','))
-        # except ValueError:
-        #     print("hi")
-        # finally:
         return xmove, ymove
 
     def find_next_move(self, allmoves, moves=[], levl=0):
-        # global zebra
-        # print(zebra)
-        # zebra += 1
             for i in range(len(allmoves)):
                 newboard = Board(deepcopy(self.pos), self.turn)
                 newboard.update_pos(allmoves[i][0], allmoves[i][1])
@@ -121,10 +106,6 @@ class Board:
                 newboard.getavailablemoves()
                 moves.append(allmoves[i])
                 if newboard.winner:
-                    # newboard.draw_board()
-                    # print(newboard.winner + ' wins the match')
-                    # print(moves)
-                    # print('level: ' + str(levl))
                     if self.turn == self.cpu:
                         self.score.append([10 - levl, levl, copy(moves)])
                     else:
@@ -132,9 +113,6 @@ class Board:
                     # long term storage for movelist goes here
                     moves.pop()
                 elif len(newboard.valid_moves) < 1:
-                    # print('stalemate')
-                    # print(moves)
-                    # print('level: ' + str(levl))
                     #this means no winner - store this list too for stalemates
                     self.score.append([0, levl, copy(moves)])
                     moves.pop()
@@ -165,11 +143,7 @@ class Board:
                 if not level in v.keys():
                     v[level] = 0
                 if prev_value is not None:
-                    # if (level % 2 == 1) and v[level] < prev_value:
-                    #   tmp = v[level]
-                    #  prev_value = v[level]
-                    # print(tmp)
-                    if v[level] > prev_value:  # (level % 2 == 0) and
+                    if v[level] > prev_value:
                         move = k
                         tmp = v[level]
                         prev_value = v[level]
@@ -181,104 +155,7 @@ class Board:
                 return move
         return move
 
-
-        # bestmove = None
-        # prev_value = None
-        # for level in levels:
-        #     for k, v in total.items():
-        #         if not prev_value:
-        #             prev_value = 0
-        #         if 1 not in v.keys():
-        #             if prev_value <= 0:
-        #                 bestmove = k
-        #                 prev_value = 0
-        #         else:
-        #             if prev_value < v[1]:
-        #                 bestmove = k
-        #                 prev_value = v[1]
-        #     if not bestmove:
-        #         bestmove = self.valid_moves[0]
-        #
-        # return str(bestmove)
-
-                        # total = {}
-        # for move in self.valid_moves:
-        #     tmp = 0
-        #     for x in self.score:
-        #         if x[2][0] == move:
-        #             tmp += x[0]
-        #     total.update({str(move): tmp})
-        # for key in total.keys():
-        #     if total[key] == max(total.values()):
-        #         return(key)
-
-        # maximin = max(self.score)
-        # minimax = min(self.score)
-        # if maximin[2][0] == minimax[2][-1]:
-        #     return maximin[2][0]
-        # if abs(minimax[0]) > abs(maximin[0]):
-        #     return minimax[2][-1]
-        # else:
-        #     return maximin[2][0]
-
-
-                # if maximin[1] < minimax[1]:
-        #     return maximin[2][0]
-        # else:
-        #     return minimax[2][0]
-        # if maximin[2][0] == minimax[2][-1]:
-        #     return maximin[2][0]
-                # for omove in self.valid_moves:
-                #     otmp = 0
-                #     for xmove in self.valid_moves:
-                #         if xmove != omove:
-                #             tmp = 0
-                #             for x in self.score:
-                #                 if omove == x[2][0] and xmove == x[2][1]:
-                #                     tmp += x[0]
-                #                     otmp += x[0]
-                #             print(str(omove) + ' ' + str(xmove) + ' = ' + str(tmp))
-                #     print(str(omove) + ' ' + str(otmp))
-
-                    #
-        # firstmoves = []
-        # for x in self.score:
-        #     firstmoves.append(x[2][0])
-        # fmove = []
-        # for k, g in groupby(firstmoves):
-        #     fmove.append(k)
-        # tally = {}
-        # for play in self.score:
-        #     if play[2][0] in fmove:
-        #         if str(play[2][0]) in tally:
-        #             tally[str(play[2][0])] = tally[str(play[2][0])] + play[0]
-        #         else:
-        #             tally[str(play[2][0])] = play[0]
-
-        # get the highest value
-        # return sorted(tally, key=tally.get)[0].strip('[]').split(',')
-        # ls = []
-        # win = []
-        # # isolate winning moves
-        # for x in self.score:
-        #     if x[0] == 10:
-        #         ls.append(x[2][0])
-        # for move, g in groupby(ls):
-        #     win.append(move)
-        # winning_tree = [x for x in self.score if x[2][0] in win]
-        # # byfirstmove = sorted(winning_tree, key=lambda firstmove: firstmove[2][0])
-        # # byscore = sorted(byfirstmove, key=lambda score: score[0])
-        # bydepth = sorted(byfirstmove, key=lambda key: key[1])
-        # for x in sorted(self.score, key=lambda firstmove: firstmove[2][0]):
-        #     if x[2][0] in win:
-        #         print(x)
-
-
 def start_game():
-    # match = Board([['X', 'O', 'X'], ['-', 'X', '-'], ['-', 'O', '-']], 'O')
-    # match = Board([['X', 'O', 'X'], ['-', 'O', '-'], ['-', '-', '-']], 'X')
-    # match = Board([['O', '-', '-'], ['X', 'X', '-'], ['O', '-', 'X']], 'O')
-    # Board.cpu = 'O'
     match = Board()
     print("Would you like to play first? y/n")
     firstplayer = input()
@@ -289,7 +166,6 @@ def start_game():
     match.draw_board()
     print("make your move, i.e. '2,0' marks the third tile down in the first column.")
     while True:
-        # Board.cpu = 'O'
         if match.turn == match.cpu:
             Board.score = []
             match.getavailablemoves()
