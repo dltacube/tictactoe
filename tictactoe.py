@@ -4,17 +4,20 @@ from copy import deepcopy, copy
 
 
 default_pos = [['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']]
+
+
 class Board:
     score = []
     cpu = None
-    def __init__(self, positions = default_pos, row_move = '', col_move = ''):
+
+    def __init__(self, positions=default_pos, row_move='', col_move=''):
         self.pos = positions
         self.row_move = row_move
         self.col_move = col_move
         self.getavailablemoves()
         if row_move != '' and col_move != '':
-             self.update_pos(self.row_move, self.col_move)
-        o_plays, x_plays = 0,0
+            self.update_pos(self.row_move, self.col_move)
+        o_plays, x_plays = 0, 0
         # determine whose turn it is anytime a new board is created
         for row in self.pos:
             for col in row:
@@ -72,8 +75,10 @@ class Board:
             for x in range(0, 3):
                 tmp_hor.append(self.pos[x][y])
                 tmp_ver.append(self.pos[y][x])
-                if len(tmp_ver) == 3: self.check_groups(tmp_ver)
-                if len(tmp_hor) == 3: self.check_groups(tmp_hor)
+                if len(tmp_ver) == 3:
+                    self.check_groups(tmp_ver)
+                if len(tmp_hor) == 3:
+                    self.check_groups(tmp_hor)
             # hardcoding in diagonal sequences
             self.check_groups([self.pos[0][0], self.pos[1][1], self.pos[2][2]])
             self.check_groups([self.pos[2][0], self.pos[1][1], self.pos[0][2]])
@@ -101,29 +106,33 @@ class Board:
         self.getavailablemoves()
         xmove, ymove = map(int, move.split(','))
         return xmove, ymove
-    # generate a list of all possible moves, and assign a score to each end state.
+    # generate a list of all possible moves, and assign a score to each end
+    # state.
+
     def find_next_move(self, allmoves, moves=[], levl=0):
-            for i in range(len(allmoves)):
+        for i in range(len(allmoves)):
                 # initialize a new Board() instance with potential move
-                newboard = Board(deepcopy(self.pos), self.turn)
-                newboard.update_pos(allmoves[i][0], allmoves[i][1])
-                newboard.check_for_winner()
-                newboard.getavailablemoves()
-                moves.append(allmoves[i])
-                if newboard.winner:
-                    if self.turn == self.cpu:
-                        self.score.append([10 - levl, levl, copy(moves)])
-                    else:
-                        self.score.append([levl - 10, levl, copy(moves)])
-                    moves.pop()
-                elif len(newboard.valid_moves) < 1:
-                    #this means no winner - store this list too for stalemates
-                    self.score.append([0, levl, copy(moves)])
-                    moves.pop()
+            newboard = Board(deepcopy(self.pos), self.turn)
+            newboard.update_pos(allmoves[i][0], allmoves[i][1])
+            newboard.check_for_winner()
+            newboard.getavailablemoves()
+            moves.append(allmoves[i])
+            if newboard.winner:
+                if self.turn == self.cpu:
+                    self.score.append([10 - levl, levl, copy(moves)])
                 else:
-                    newboard.find_next_move(newboard.valid_moves, levl=levl+1)
-                    moves.pop()
-    # from the list of all moves, with their scores, find the path that leads to the highest score
+                    self.score.append([levl - 10, levl, copy(moves)])
+                moves.pop()
+            elif len(newboard.valid_moves) < 1:
+                # this means no winner - store this list too for stalemates
+                self.score.append([0, levl, copy(moves)])
+                moves.pop()
+            else:
+                newboard.find_next_move(newboard.valid_moves, levl=levl + 1)
+                moves.pop()
+    # from the list of all moves, with their scores, find the path that leads
+    # to the highest score
+
     def find_best_move(self):
         levels = set([l[0] for l in groupby(self.score, key=lambda x: x[1])])
         total = {}
@@ -158,6 +167,7 @@ class Board:
             if [v[level] for k, v in total.items()].count(tmp) == 1:
                 return move
         return move
+
 
 def start_game():
     match = Board()
