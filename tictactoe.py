@@ -15,6 +15,7 @@ class Board:
         if row_move != '' and col_move != '':
              self.update_pos(self.row_move, self.col_move)
         o_plays, x_plays = 0,0
+        # determine whose turn it is anytime a new board is created
         for row in self.pos:
             for col in row:
                 if col == 'O':
@@ -35,25 +36,26 @@ class Board:
         os.system('cls' if os.name == 'nt' else 'clear')
         # line numbers
         print('player ' + self.turn + "'s turn")
-        print(' ' * 3 + '1' + ' ' * 7 + '2' + ' ' * 7 + '3')
+        print(' ' * 3 + '0' + ' ' * 7 + '1' + ' ' * 7 + '2')
         # board
         print(' ' * 7 + '|' + ' ' * 7 + '|' + ' ' * 7)
-        print('1' + ' ' * 2 + self.pos[0][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[0][1] + ' ' * 3 + '|' + ' ' * 3 +
+        print('0' + ' ' * 2 + self.pos[0][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[0][1] + ' ' * 3 + '|' + ' ' * 3 +
               self.pos[0][2] +
               ' ' * 3)
         print('_' * 7 + '|' + '_' * 7 + '|' + '_' * 7)
         print(' ' * 7 + '|' + ' ' * 7 + '|' + ' ' * 7)
-        print('2' + ' ' * 2 + self.pos[1][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[1][1] + ' ' * 3 + '|' + ' ' * 3 +
+        print('1' + ' ' * 2 + self.pos[1][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[1][1] + ' ' * 3 + '|' + ' ' * 3 +
               self.pos[1][
                   2] + ' ' * 3)
         print('_' * 7 + '|' + '_' * 7 + '|' + '_' * 7)
         print(' ' * 7 + '|' + ' ' * 7 + '|' + ' ' * 7)
-        print('3' + ' ' * 2 + self.pos[2][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[2][1] + ' ' * 3 + '|' + ' ' * 3 +
+        print('2' + ' ' * 2 + self.pos[2][0] + ' ' * 3 + '|' + ' ' * 3 + self.pos[2][1] + ' ' * 3 + '|' + ' ' * 3 +
               self.pos[2][
                   2] + ' ' * 3)
         print(' ' * 7 + '|' + ' ' * 7 + '|' + ' ' * 7)
         print('')
 
+    # make sure that a move is legal
     def update_pos(self, x, y):
         if self.pos[x][y] == '-':
             self.pos[x][y] = self.turn
@@ -61,6 +63,7 @@ class Board:
         else:
             print('invalid position. try again')
 
+    # look for a winner. assign winner to self.winner
     def check_for_winner(self):
         for y in range(0, 3):
             tmp_hor = []
@@ -77,7 +80,8 @@ class Board:
 
     def check_groups(self, seq):
         '''we group together all recurring characters then check if there is more than one group.
-        If there are 2 groups or more, the sequence does not have 3 consecutives of any particular key'''
+        One group in a sequence means that there are 3 of the same character in a row.
+        If there are 2 groups or more, there is no winner yet'''
         groups = []
         for k, g in groupby(seq):
             groups.append(list(g))
@@ -97,9 +101,10 @@ class Board:
         self.getavailablemoves()
         xmove, ymove = map(int, move.split(','))
         return xmove, ymove
-
+    # generate a list of all possible moves, and assign a score to each end state.
     def find_next_move(self, allmoves, moves=[], levl=0):
             for i in range(len(allmoves)):
+                # initialize a new Board() instance with potential move
                 newboard = Board(deepcopy(self.pos), self.turn)
                 newboard.update_pos(allmoves[i][0], allmoves[i][1])
                 newboard.check_for_winner()
@@ -110,7 +115,6 @@ class Board:
                         self.score.append([10 - levl, levl, copy(moves)])
                     else:
                         self.score.append([levl - 10, levl, copy(moves)])
-                    # long term storage for movelist goes here
                     moves.pop()
                 elif len(newboard.valid_moves) < 1:
                     #this means no winner - store this list too for stalemates
@@ -119,7 +123,7 @@ class Board:
                 else:
                     newboard.find_next_move(newboard.valid_moves, levl=levl+1)
                     moves.pop()
-
+    # from the list of all moves, with their scores, find the path that leads to the highest score
     def find_best_move(self):
         levels = set([l[0] for l in groupby(self.score, key=lambda x: x[1])])
         total = {}
