@@ -10,7 +10,7 @@ class Board:
     score = []
     cpu = None
 
-    def __init__(self, positions=default_pos, row_move='', col_move=''):
+    def __init__(self, positions=deepcopy(default_pos), row_move='', col_move=''):
         self.pos = positions
         self.row_move = row_move
         self.col_move = col_move
@@ -63,6 +63,7 @@ class Board:
         if self.pos[x][y] == '-':
             self.pos[x][y] = self.turn
             self.turn = 'O' if self.turn == 'X' else 'X'
+            self.valid_moves.remove([x, y])
         else:
             print('invalid position. try again')
 
@@ -82,6 +83,9 @@ class Board:
             # hardcoding in diagonal sequences
             self.check_groups([self.pos[0][0], self.pos[1][1], self.pos[2][2]])
             self.check_groups([self.pos[2][0], self.pos[1][1], self.pos[0][2]])
+    def check_for_stalemate(self):
+        if not self.valid_moves:
+            return 1
 
     def check_groups(self, seq):
         '''we group together all recurring characters then check if there is more than one group.
@@ -195,6 +199,10 @@ def start_game():
         match.check_for_winner()
         if match.winner:
             print("Player " + match.winner + " wins!")
+            playagain = input("play again? y/n: ")
+            break
+        if match.check_for_stalemate():
+            print("stalemate.")
             playagain = input("play again? y/n: ")
             break
     return playagain
