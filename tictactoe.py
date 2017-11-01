@@ -10,7 +10,7 @@ class Board:
     score = []
     cpu = None
 
-    def __init__(self, positions=deepcopy(default_pos), row_move='', col_move=''):
+    def __init__(self, positions, row_move='', col_move=''):
         self.pos = positions
         self.row_move = row_move
         self.col_move = col_move
@@ -174,7 +174,7 @@ class Board:
 
 
 def start_game():
-    match = Board()
+    match = Board(deepcopy(default_pos))
     print("Would you like to play first? y/n")
     firstplayer = input()
     if firstplayer == 'y':
